@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace MerchantGame
 {
@@ -8,7 +7,7 @@ namespace MerchantGame
         static void Main(string[] args)
         {
             MerchantGame MG = new MerchantGame();
-            MG.start();
+            MG.Start();
         }
     }
 
