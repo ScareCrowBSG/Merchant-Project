@@ -10,6 +10,10 @@ namespace MerchantGame
         DateTime time;
         char input;
         Dictionary<string, Town> cities;
+        Base homeBase;
+
+        //should be moved to a class later
+        float mercPrice;
 
         public void Start()
         {
@@ -17,6 +21,7 @@ namespace MerchantGame
             AddTestCities();
             time = new DateTime();
             input = '0';
+            homeBase = new Base();
 
             while(!stop)
             {
@@ -65,20 +70,16 @@ namespace MerchantGame
         {
             while (input != 'x')
             {
-                Town theBase = cities["Base"];
                 Console.Clear();
-                Console.WriteLine("Here's where we stand with our inventory right now:\n");
-                foreach(KeyValuePair<string,int> entry in theBase.inventory)
+                Console.WriteLine("Here's what we have on hand right now:\n");
+                foreach(KeyValuePair<string,int> entry in homeBase.inventory)
                 {
                     if (entry.Value != 0)
                     {
-                        Console.WriteLine(UppercaseFirst(entry.Key));
-                        Console.WriteLine("Amt: " + entry.Value 
-                            + " Buy Price: " + theBase.prices[entry.Key].buyPrice 
-                            + " Sell Price: " + theBase.prices[entry.Key].sellPrice + "\n");
+                        Console.WriteLine(entry.Value + " " + UppercaseFirst(entry.Key));
                     }
                 }
-                Console.WriteLine("Press \'x\' to return to the shop");
+                Console.WriteLine("\nPress \'x\' to return to the shop");
                 input = getInput();
             }
             input = '0';
@@ -118,6 +119,41 @@ namespace MerchantGame
             }
         }
 
+        class Caravan
+        {
+            public Dictionary<string, int> inventory;
+            public string destinationCity;
+            public DateTime arrivalDate;
+            public int speed;
+            public int defense;
+            public float price;
+        }
+
+        class Base
+        {
+            public Dictionary<string, int> inventory;
+            public List<Caravan> caravans;
+
+            public Base ()
+            {
+                inventory = new Dictionary<string, int>();
+                AddTestInventory();
+
+            }
+            private void AddTestInventory()
+            {
+                inventory.Add("food", 5);
+                inventory.Add("water", 3);
+                inventory.Add("guns", 1);
+                inventory.Add("steel", 0);
+                inventory.Add("iron", 0);
+                inventory.Add("coal", 0);
+                inventory.Add("alcohol", 3);
+                inventory.Add("money", 100);
+            }
+
+        }
+
         struct Pricing
         {
             public float buyPrice;
@@ -126,15 +162,6 @@ namespace MerchantGame
 
         void AddTestCities()
         {
-            Town Base = new Town();
-            Base.AddItem("food", 5);
-            Base.AddItem("water", 3);
-            Base.AddItem("guns", 1);
-            Base.AddItem("steel", 0);
-            Base.AddItem("iron", 0);
-            Base.AddItem("coal", 0);
-            Base.AddItem("alcohol", 3);
-            cities.Add("Base", Base);
 
             Town Pittsburgh = new Town();
             Pittsburgh.AddItem("food", 5, 10.0f, 5.0f);
