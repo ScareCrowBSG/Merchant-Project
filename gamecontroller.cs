@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MerchantGame
 {
     partial class MerchantGame
     {
         bool stop;
-        ulong elapsed;
-        DateTime time;
         char input;
         Dictionary<string, Town> cities;
         Base homeBase;
@@ -19,13 +18,11 @@ namespace MerchantGame
         {
             cities = new Dictionary<string, Town>();
             AddTestCities();
-            time = new DateTime();
             input = '0';
             homeBase = new Base();
 
             while(!stop)
             {
-                DeltaTime();
                 Console.Clear();
                 Console.WriteLine("Howdy Boss. Welcome to the shop.");
                 Console.WriteLine("a : caravans");
@@ -48,9 +45,7 @@ namespace MerchantGame
                 {
                     stop = true;
                 }
-                System.Threading.Thread.Sleep(1500);
             }
-            
         }
 
         public void caravanScreen()
@@ -58,9 +53,53 @@ namespace MerchantGame
             while (input != 'x')
             {
                 Console.Clear();
-                Console.WriteLine("Here's where we stand with our caravan right now:");
-                Console.WriteLine("Press \'x\' to return to the shop");
+                Console.WriteLine("Here's where we stand with our caravan right now:\n");
+                if (homeBase.caravans.Count == 0)
+                {
+                    Console.WriteLine("Sorry to say, ain\'t got no caravans currently assigned.\n");
+                }
+                else
+                {
+                    for (int i = 0; i < homeBase.caravans.Count; i++)
+                    {
+                        Console.WriteLine("Caravan number " + (i+1) + " is carrying " 
+                            + homeBase.caravans[i].inventory.Values.Sum() + " items.");
+                    }
+                }
+                Console.WriteLine("\na : Hire caravans");
+                Console.WriteLine("x : Return to the shop");
+
                 input = getInput();
+
+                if (input == 'a')
+                {
+                    Caravan newCaravan = new Caravan();
+                    Console.Clear();
+                    Console.WriteLine("Alright. Let's hire a caravan.\n");
+                    Console.WriteLine("We have $" + homeBase.money + " to work with.");
+                    Console.WriteLine("This caravan is going to cost $" + newCaravan.price);
+                    Console.WriteLine("That okay?\n");
+                    Console.WriteLine("y: accept");
+                    Console.WriteLine("any key: exit");
+
+                    input = getInput();
+
+                    if (input == 'y')
+                    {
+                        if (homeBase.money < newCaravan.price)
+                        {
+                            Console.Clear();
+                            Console.WriteLine("We can't afford this caravan.");
+                            Console.WriteLine("Press any key to continue.");
+                            getInput();
+                        }
+                        else
+                        {
+                            homeBase.money -= newCaravan.price;
+                            homeBase.caravans.Add(newCaravan);
+                        }
+                    }
+                }
             }
             input = '0';
             return;
@@ -86,15 +125,9 @@ namespace MerchantGame
             return;
         }
 
-        public void DeltaTime()
-        {
-            elapsed += (ulong)DateTime.Now.Subtract(time).Seconds;
-            time = DateTime.Now;
-        }
-
         public char getInput()
         {
-            return Console.ReadKey(true).KeyChar;
+            return Console.ReadKey(false).KeyChar;
         }
 
         class Town
@@ -106,11 +139,6 @@ namespace MerchantGame
             {
                 inventory = new Dictionary<string, int>();
                 prices = new Dictionary<string, Pricing>();
-            }
-            public void AddItem(string itemName, int amount)
-            {
-                inventory.Add(itemName, amount);
-                prices.Add(itemName, new Pricing {buyPrice = 0, sellPrice = 0});
             }
             public void AddItem(string itemName, int amount, float buyFrom, float sellTo)
             {
@@ -126,17 +154,32 @@ namespace MerchantGame
             public DateTime arrivalDate;
             public int speed;
             public int defense;
+            public int capacity;
             public float price;
+
+            public Caravan ()
+            {
+                inventory = new Dictionary<string, int>();
+                destinationCity = "Unassigned";
+                //arrivalDate = null;
+                speed = 1000;
+                defense = 1;
+                capacity = 100;
+                price = 50.0f;
+            }
         }
 
         class Base
         {
             public Dictionary<string, int> inventory;
             public List<Caravan> caravans;
+            public float money;
 
             public Base ()
             {
                 inventory = new Dictionary<string, int>();
+                caravans = new List<Caravan>();
+                money = 100.0f;
                 AddTestInventory();
 
             }
@@ -149,7 +192,6 @@ namespace MerchantGame
                 inventory.Add("iron", 0);
                 inventory.Add("coal", 0);
                 inventory.Add("alcohol", 3);
-                inventory.Add("money", 100);
             }
 
         }
