@@ -29,9 +29,7 @@ namespace MerchantGame
                 Console.WriteLine("b : inventory");
                 Console.WriteLine("Go ahead and press \'x\' to leave.");
 
-                input = getInput();
-
-                Console.WriteLine(input);
+                input = GetInput();
 
                 if (input == 'a')
                 {
@@ -81,7 +79,7 @@ namespace MerchantGame
 
                 Console.WriteLine("x : Return to the shop");
 
-                input = getInput();
+                input = GetInput();
 
                 if (input == 'a')
                 {
@@ -124,7 +122,7 @@ namespace MerchantGame
             Console.WriteLine("Capacity: " + homeBase.caravans[i].inventory.Values.Sum()
                 + " out of " + homeBase.caravans[i].capacity + " items.");
             Console.WriteLine("\nPress any key to continue.");
-            getInput();
+            GetInput();
             input = '0';
             return;
         }
@@ -140,7 +138,7 @@ namespace MerchantGame
             Console.WriteLine("y: accept");
             Console.WriteLine("any key: exit");
 
-            input = getInput();
+            input = GetInput();
 
             if (input == 'y')
             {
@@ -149,7 +147,7 @@ namespace MerchantGame
                     Console.Clear();
                     Console.WriteLine("We can't afford this caravan.");
                     Console.WriteLine("Press any key to continue.");
-                    getInput();
+                    GetInput();
                 }
                 else
                 {
@@ -173,31 +171,52 @@ namespace MerchantGame
                     }
                 }
                 Console.WriteLine("\nPress \'x\' to return to the shop");
-                input = getInput();
+                input = GetInput();
             }
             input = '0';
             return;
         }
 
-        public char getInput()
+        public char GetInput()
         {
             return Console.ReadKey(false).KeyChar;
+        }
+
+        public uint Distance (string A, string B)
+        {
+            if ((A == "Pittsburgh" && B == "Minneapolis") || (A == "Minneapolis" && B == "Pittsburgh"))
+            {
+                //special case for Lake Michigan
+                return 142510;
+            }
+            return (uint)(Math.Sqrt((Math.Pow(cities[B].coordinates.x - cities[A].coordinates.x, 2)) + (Math.Pow(cities[B].coordinates.y - cities[A].coordinates.y, 2))));
+        }
+
+        public DateTime ArriveBy (string A, string B, int i)
+        {
+            return DateTime.Now.AddMinutes((Distance(A,B)/(i*10000))*60);
         }
 
         class Town
         {
             public Dictionary<string, int> inventory;
             public Dictionary<string, Pricing> prices;
+            public Coordinate coordinates;
 
             public Town ()
             {
                 inventory = new Dictionary<string, int>();
                 prices = new Dictionary<string, Pricing>();
+                coordinates = new Coordinate();
             }
             public void AddItem(string itemName, int amount, float buyFrom, float sellTo)
             {
                 inventory.Add(itemName, amount);
                 prices.Add(itemName, new Pricing {buyPrice = buyFrom, sellPrice = sellTo});
+            }
+            public void SetLocation(uint coordX, uint coordY)
+            {
+                coordinates = new Coordinate {x = coordX, y = coordY};
             }
         }
 
@@ -218,7 +237,7 @@ namespace MerchantGame
                 destinationCity = "Base";
                 travelling = false;
                 //arrivalDate = null;
-                speed = 1000; //not final value
+                speed = 1; //not final value
                 defense = 1;
                 capacity = 100;
                 price = 50.0f;
@@ -230,12 +249,14 @@ namespace MerchantGame
             public Dictionary<string, int> inventory;
             public List<Caravan> caravans;
             public float money;
+            public Coordinate coordinates;
 
             public Base ()
             {
                 inventory = new Dictionary<string, int>();
                 caravans = new List<Caravan>();
                 money = 100.0f;
+                coordinates = new Coordinate {x = 416020, y = 873372};
                 AddTestInventory();
 
             }
@@ -258,10 +279,17 @@ namespace MerchantGame
             public float sellPrice;
         }
 
+        public struct Coordinate
+        {
+            public uint x;
+            public uint y;
+        }
+
         void AddTestCities()
         {
 
             Town Pittsburgh = new Town();
+            Pittsburgh.SetLocation(404406,799959);
             Pittsburgh.AddItem("food", 5, 10.0f, 5.0f);
             Pittsburgh.AddItem("water", 7, 5.0f, 2.0f);
             Pittsburgh.AddItem("guns", 10, 75.0f, 25.0f);
@@ -272,6 +300,7 @@ namespace MerchantGame
             cities.Add("Pittsburgh", Pittsburgh);
 
             Town Minneapolis = new Town();
+            Minneapolis.SetLocation(449778,932650);
             Minneapolis.AddItem("food", 5, 10.0f, 5.0f);
             Minneapolis.AddItem("water", 7, 5.0f, 2.0f);
             Minneapolis.AddItem("guns", 10, 25.0f, 10.0f);
@@ -282,6 +311,7 @@ namespace MerchantGame
             cities.Add("Minneapolis", Minneapolis);
 
             Town Omaha = new Town();
+            Omaha.SetLocation(412565,959345);
             Omaha.AddItem("food", 25, 5.0f, 2.0f);
             Omaha.AddItem("water", 7, 5.0f, 2.0f);
             Omaha.AddItem("guns", 0, 100.0f, 25.0f);
@@ -292,6 +322,7 @@ namespace MerchantGame
             cities.Add("Omaha", Omaha);
             
             Town Welch = new Town();
+            Welch.SetLocation(374329,815846);
             Welch.AddItem("food", 3, 50.0f, 25.0f);
             Welch.AddItem("water", 2, 35.0f, 10.0f);
             Welch.AddItem("guns", 5, 85.0f, 45.0f);
