@@ -35,11 +35,11 @@ namespace MerchantGame
 
                 if (input == 'a')
                 {
-                    caravanScreen();
+                    CaravanScreen();
                 }
                 if (input == 'b')
                 {
-                    inventoryScreen();
+                    InventoryScreen();
                 }
                 if (input == 'x')
                 {
@@ -48,56 +48,51 @@ namespace MerchantGame
             }
         }
 
-        public void caravanScreen()
+        public void CaravanScreen()
         {
+            bool canInteractWithCaravans = false;
             while (input != 'x')
             {
+                if (homeBase.caravans.Count > 0)
+                {
+                    canInteractWithCaravans = true;
+                }
                 Console.Clear();
                 Console.WriteLine("Here's where we stand with our caravan right now:\n");
-                if (homeBase.caravans.Count == 0)
+                if (!canInteractWithCaravans)
                 {
-                    Console.WriteLine("Sorry to say, ain\'t got no caravans currently assigned.\n");
+                    Console.WriteLine("Sorry to say, ain\'t got no caravans currently assigned.");
                 }
                 else
                 {
                     for (int i = 0; i < homeBase.caravans.Count; i++)
                     {
                         Console.WriteLine("Caravan number " + (i+1) + " is carrying " 
-                            + homeBase.caravans[i].inventory.Values.Sum() + " items.");
+                            + homeBase.caravans[i].inventory.Values.Sum() + " out of " 
+                            + homeBase.caravans[i].capacity + " items.");
                     }
                 }
                 Console.WriteLine("\na : Hire caravans");
+                if (canInteractWithCaravans)
+                {
+                    Console.WriteLine("# : View caravan details");
+                    Console.WriteLine("f : Fire caravan");
+                }
+
                 Console.WriteLine("x : Return to the shop");
 
                 input = getInput();
 
                 if (input == 'a')
                 {
-                    Caravan newCaravan = new Caravan();
-                    Console.Clear();
-                    Console.WriteLine("Alright. Let's hire a caravan.\n");
-                    Console.WriteLine("We have $" + homeBase.money + " to work with.");
-                    Console.WriteLine("This caravan is going to cost $" + newCaravan.price);
-                    Console.WriteLine("That okay?\n");
-                    Console.WriteLine("y: accept");
-                    Console.WriteLine("any key: exit");
-
-                    input = getInput();
-
-                    if (input == 'y')
+                    HireCaravanScreen();
+                }
+                else if (Char.IsNumber(input) && canInteractWithCaravans)
+                {
+                    int caravanIndex = (int)Char.GetNumericValue(input);
+                    if (caravanIndex <= homeBase.caravans.Count && caravanIndex != 0)
                     {
-                        if (homeBase.money < newCaravan.price)
-                        {
-                            Console.Clear();
-                            Console.WriteLine("We can't afford this caravan.");
-                            Console.WriteLine("Press any key to continue.");
-                            getInput();
-                        }
-                        else
-                        {
-                            homeBase.money -= newCaravan.price;
-                            homeBase.caravans.Add(newCaravan);
-                        }
+                        CaravanDetailsScreen(caravanIndex-1);
                     }
                 }
             }
@@ -105,7 +100,66 @@ namespace MerchantGame
             return;
         }
 
-        public void inventoryScreen()
+        public void CaravanDetailsScreen(int i)
+        {
+            Console.Clear();
+            Console.WriteLine("Details about Caravan #" + (i+1) + ":\n");
+            if (homeBase.caravans[i].travelling)
+            {
+                Console.WriteLine("She's heading towards " + homeBase.caravans[i].destinationCity);
+                Console.WriteLine("Expected Arrival Date: " + homeBase.caravans[i].arrivalDate);
+            }
+            else if (homeBase.caravans[i].destinationCity == "Base")
+            {
+                Console.WriteLine("She's at the home base, waiting for orders");
+            }
+            else
+            {
+                Console.WriteLine("She's at " + homeBase.caravans[i].destinationCity
+                    + ", waiting for orders");
+            }
+
+            Console.WriteLine("Speed: " + homeBase.caravans[i].speed);
+            Console.WriteLine("Defense: " + homeBase.caravans[i].defense);
+            Console.WriteLine("Capacity: " + homeBase.caravans[i].inventory.Values.Sum()
+                + " out of " + homeBase.caravans[i].capacity + " items.");
+            Console.WriteLine("\nPress any key to continue.");
+            getInput();
+            input = '0';
+            return;
+        }
+
+        public void HireCaravanScreen()
+        {
+            Caravan newCaravan = new Caravan();
+            Console.Clear();
+            Console.WriteLine("Alright. Let's hire a caravan.\n");
+            Console.WriteLine("We have $" + homeBase.money + " to work with.");
+            Console.WriteLine("This caravan is going to cost $" + newCaravan.price);
+            Console.WriteLine("That okay?\n");
+            Console.WriteLine("y: accept");
+            Console.WriteLine("any key: exit");
+
+            input = getInput();
+
+            if (input == 'y')
+            {
+                if (homeBase.money < newCaravan.price)
+                {
+                    Console.Clear();
+                    Console.WriteLine("We can't afford this caravan.");
+                    Console.WriteLine("Press any key to continue.");
+                    getInput();
+                }
+                else
+                {
+                    homeBase.money -= newCaravan.price;
+                    homeBase.caravans.Add(newCaravan);
+                }
+            }
+        }
+
+        public void InventoryScreen()
         {
             while (input != 'x')
             {
@@ -151,6 +205,7 @@ namespace MerchantGame
         {
             public Dictionary<string, int> inventory;
             public string destinationCity;
+            public bool travelling;
             public DateTime arrivalDate;
             public int speed;
             public int defense;
@@ -160,9 +215,10 @@ namespace MerchantGame
             public Caravan ()
             {
                 inventory = new Dictionary<string, int>();
-                destinationCity = "Unassigned";
+                destinationCity = "Base";
+                travelling = false;
                 //arrivalDate = null;
-                speed = 1000;
+                speed = 1000; //not final value
                 defense = 1;
                 capacity = 100;
                 price = 50.0f;
